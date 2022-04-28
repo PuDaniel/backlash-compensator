@@ -1,6 +1,6 @@
 # backlash-compensator
 Simple x- and y-axis backlash compensation for a G-Code file.
-Specify the machine's x- and y-backlash at the beginning of the file.
+Specify the machine's x- and y-backlash at the beginning of the file, or alternatively use the ``-x`` and ``-y`` command line input options.
 
 ### Usage:
 ```
@@ -18,8 +18,7 @@ optional arguments:
                         Backlash in y-direction, default 0.1 mm
   -t TOLERANCE, --tolerance TOLERANCE
                         Tolerance against rounding errors, default 0.005 mm
-```
-Specify the machine's x- and y-backlash with ``-x`` and ``-y`` input options.  
+```  
 If no output file is given, a new file is created automatically named: "inputfile_nobacklash.nc"
 
 ### Limitations:
