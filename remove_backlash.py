@@ -6,8 +6,7 @@
 #  Copyright 2018 Daniel Pusztai
 #  
 
-import sys
-import os.path
+import argparse
 
 # Specify your machine's backlash here
 backlash_x = 0.1
