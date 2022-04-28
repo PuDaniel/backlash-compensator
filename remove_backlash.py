@@ -9,11 +9,10 @@
 import sys
 import os.path
 
-# Global variables
-backlash_x = 0.202          # Backlash in x-direction
-backlash_y = 0.045          # Backlash in y-direction
+# Specify your machine's backlash here
+backlash_x = 0.1
+backlash_y = 0.1
 
-tol = 0.005                 # Tolerance against rounding errors
 
 # Get the G word in a sentence (line)
 def get_G(sentence):
@@ -40,7 +39,9 @@ def fix_whitespace(sentence, parameter):
 
 # Get the X coordinate in a sentence (line)
 def get_X(sentence):
-    if 'X' in sentence:
+    if '(' in sentence:
+        return None   
+    elif 'X' in sentence:
         start = sentence.find('X') + 1
         end = sentence.find(' ', start)
         return float(sentence[start:end])
@@ -49,7 +50,9 @@ def get_X(sentence):
     
 # Get the Y coordinate in a sentence (line)
 def get_Y(sentence):
-    if 'Y' in sentence:
+    if '(' in sentence:
+        return None  
+    elif 'Y' in sentence:
         start = sentence.find('Y') + 1
         end = sentence.find(' ', start)
         return float(sentence[start:end])
@@ -58,7 +61,9 @@ def get_Y(sentence):
     
 # Get the I coordinate in a sentence (line)
 def get_I(sentence):
-    if 'I' in sentence:
+    if '(' in sentence:
+        return None
+    elif 'I' in sentence:
         start = sentence.find('I') + 1
         end = sentence.find(' ', start)
         return float(sentence[start:end])
@@ -67,7 +72,9 @@ def get_I(sentence):
     
 # Get the J coordinate in a sentence (line)
 def get_J(sentence):
-    if 'J' in sentence:
+    if '(' in sentence:
+        return None
+    elif 'J' in sentence:
         start = sentence.find('J') + 1
         end = sentence.find(' ', start)
         return float(sentence[start:end])
@@ -76,7 +83,9 @@ def get_J(sentence):
 
 # Get feedrate word in a sentence (line)
 def get_F(sentence):
-    if 'F' in sentence:
+    if '(' in sentence:
+        return None
+    elif 'F' in sentence:
         start = sentence.find('F') + 1
         end = sentence.find(' ', start)
         return float(sentence[start:end])
@@ -194,28 +203,38 @@ def replace_J(sentence, value):
         return sentence
 
 if __name__ == '__main__':
-    # Check if there is at least one command line argument
-    if len(sys.argv) < 2:
-        raise Exception('Not enough input arguments!\n' 
-            'Usage: remove_backlash inputfile [outputfile]')
-         
-    # Get the first filename (input file) and check if file exists
-    input_file_name = sys.argv[1]
-    if not os.path.isfile(input_file_name):
-        raise Exception('%s is not a valid file!' %input_file_name)
-        
-    # Check if there is a second filename and set the output file
-    if len(sys.argv) > 2:
-        output_file_name = sys.argv[2]
+    # Get the command line inputs
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("-x", "--backlash_x", type=float, default=backlash_x, 
+                        help="Backlash in x-direction, default 0.1 mm")
+    parser.add_argument("-y", "--backlash_y", type=float, default=backlash_y, 
+                        help="Backlash in y-direction, default 0.1 mm")
+    parser.add_argument("-t", "--tolerance", type=float, default=0.05,
+                        help="Tolerance against rounding errors, default 0.05 mm")
+    parser.add_argument("in_file", type=str, help="Input G-code file")
+    parser.add_argument("out_file", type=str, nargs="?", 
+                        help="Output G-code file, default in_file_nobacklash.nc")
+
+    args = parser.parse_args()
+    
+    backlash_x = args.backlash_x
+    backlash_y = args.backlash_y
+    tol = args.tolerance
+    
+    input_file_name = args.in_file
+    
+    if args.out_file:
+        output_file_name = args.out_file
     else:
         output_file_name = input_file_name.split('.')[-2] + '_nobacklash.' + input_file_name.split('.')[-1]
-        
+
     # Open input file and read all lines
     with open(input_file_name, 'r') as input_file:
         gcode = input_file.readlines()
     
     # Check if file is already backlash compensated
-    if ';--+--BACKLASH COMPENSATED--+--\n' in gcode:
+    if '(--+--BACKLASH COMPENSATED--+--)\n' in gcode:
         print('File has already been backlash compensated! => Nothing to do!')
         quit()
     
@@ -404,8 +423,8 @@ if __name__ == '__main__':
         line += 1
     
     # Add the compensation header
-    gcode.insert(0, ';--+--BACKLASH COMPENSATED--+--\n')
-    gcode.insert(1, '; Zero is defined when driving from negative X/Y to zero X/Y\n')
+    gcode.insert(0, '(--+--BACKLASH COMPENSATED--+--)\n')
+    gcode.insert(1, '(Zero is defined when driving from negative X/Y to zero X/Y)\n')
     gcode.insert(2, 'G90 G17\n')
     gcode.insert(3, 'G0 X-1 Y-1\n')
     gcode.insert(4, 'G0 X0 Y0\n')
